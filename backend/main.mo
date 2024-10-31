@@ -70,7 +70,7 @@ actor MinesweeperGame {
         gameState
     };
 
-    public func revealCell(x: Nat, y: Nat): async Nat {
+    public shared func revealCell(x: Nat, y: Nat): async Nat {
         switch (gameState) {
             case (null) { return 0 };
             case (?state) {
@@ -92,7 +92,7 @@ actor MinesweeperGame {
         };
     };
 
-    public func toggleFlag(x: Nat, y: Nat): async Bool {
+    public shared func toggleFlag(x: Nat, y: Nat): async Bool {
         switch (gameState) {
             case (null) { return false };
             case (?state) {
@@ -117,7 +117,7 @@ actor MinesweeperGame {
         };
     };
 
-    public func updateScore(points: Nat): async Nat {
+    public shared func updateScore(points: Nat): async Nat {
         switch (gameState) {
             case (null) { return 0 };
             case (?state) {
