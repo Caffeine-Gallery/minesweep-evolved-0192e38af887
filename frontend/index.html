@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minesweeper Evolution</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="particles"></div>
+    <div class="game-container">
+        <div class="header">
+            <h1 style="margin: 0">Minesweeper Evolution</h1>
+            <div id="timer" class="stat-value">0s</div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-value" id="score">0</div>
+                <div>Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="mines-left">0</div>
+                <div>Mines Left</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="streak">0</div>
+                <div>Streak</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="high-score">0</div>
+                <div>High Score</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <select id="difficulty" class="difficulty-select">
+                <option value="0">Beginner</option>
+                <option value="1">Intermediate</option>
+                <option value="2">Expert</option>
+                <option value="3">Insane</option>
+            </select>
+            <button id="newGame" class="btn">New Game</button>
+        </div>
+
+        <div id="grid" class="grid"></div>
+    </div>
+
+    <div class="combo-meter">
+        <div>Combo x<span id="combo-multiplier">1</span></div>
+        <div class="combo-bar">
+            <div id="combo-fill" class="combo-fill" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <script type="module" src="index.js"></script>
+</body>
+</html>
