@@ -27,8 +27,10 @@ class Game {
         this.showLoading();
         try {
             const state = await backend.getGameState();
+            console.log('Raw game state:', state); // Log raw state for debugging
             if (state && state.length > 0) {
                 this.gameState = this.convertBigIntsToNumbers(state[0]);
+                console.log('Converted game state:', this.gameState); // Log converted state
             } else {
                 console.error('Invalid game state received');
             }
@@ -40,27 +42,40 @@ class Game {
     }
 
     convertBigIntsToNumbers(obj) {
+        if (typeof obj !== 'object' || obj === null) {
+            return obj;
+        }
+        if (typeof obj === 'bigint') {
+            return Number(obj);
+        }
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.convertBigIntsToNumbers(item));
+        }
         const convertedObj = {};
         for (const key in obj) {
-            if (typeof obj[key] === 'bigint') {
-                convertedObj[key] = Number(obj[key]);
-            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-                convertedObj[key] = this.convertBigIntsToNumbers(obj[key]);
-            } else {
-                convertedObj[key] = obj[key];
-            }
+            convertedObj[key] = this.convertBigIntsToNumbers(obj[key]);
         }
         return convertedObj;
     }
 
     renderBoard() {
         if (!this.gameState || !this.gameState.grid) {
-            console.error('Game state or grid is undefined');
+            console.error('Game state or grid is undefined', this.gameState);
             return;
         }
 
         this.boardElement.innerHTML = '';
-        this.gameState.grid.forEach((row, y) => {
+        const grid = this.gameState.grid;
+        if (!Array.isArray(grid)) {
+            console.error('Grid is not an array', grid);
+            return;
+        }
+
+        grid.forEach((row, y) => {
+            if (!Array.isArray(row)) {
+                console.error('Row is not an array', row);
+                return;
+            }
             row.forEach((cell, x) => {
                 const cellElement = document.createElement('div');
                 cellElement.className = 'cell';
