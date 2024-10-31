@@ -1,34 +1,103 @@
 :root {
+    --primary-color: #4a90e2;
+    --secondary-color: #f39c12;
+    --background-color: #f0f0f0;
+    --text-color: #333;
     --cell-size: 30px;
-    --border-color: #7b7b7b;
+    --border-color: #bdbdbd;
     --revealed-color: #e0e0e0;
-    --unrevealed-color: #c0c0c0;
-    --hover-color: #a0a0a0;
-    --mine-color: #ff0000;
-    --flag-color: #ff8c00;
+    --hover-color: #d0d0d0;
+}
+
+.dark-theme {
+    --primary-color: #3498db;
+    --secondary-color: #e67e22;
+    --background-color: #2c3e50;
+    --text-color: #ecf0f1;
+    --border-color: #34495e;
+    --revealed-color: #34495e;
+    --hover-color: #2c3e50;
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Poppins', sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
-    background-color: #f0f0f0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
 }
 
 #game-container {
-    text-align: center;
-    background-color: white;
-    padding: 20px;
+    background-color: var(--background-color);
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: center;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 h1 {
-    color: #333;
+    font-size: 2.5em;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+#theme-toggle {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+}
+
+#game-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
+}
+
+#difficulty-selector button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin: 0 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#difficulty-selector button:hover {
+    background-color: var(--secondary-color);
+}
+
+#game-info {
+    display: flex;
+    justify-content: space-around;
+    background-color: var(--revealed-color);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    margin: 0 10px;
+}
+
+.info-item .icon {
+    margin-right: 5px;
+    font-size: 1.2em;
 }
 
 #game-board {
@@ -37,19 +106,20 @@ h1 {
     gap: 1px;
     background-color: var(--border-color);
     border: 2px solid var(--border-color);
-    padding: 1px;
+    border-radius: 5px;
+    overflow: hidden;
 }
 
 .cell {
     width: var(--cell-size);
     height: var(--cell-size);
-    background-color: var(--unrevealed-color);
+    background-color: var(--background-color);
     display: flex;
     justify-content: center;
     align-items: center;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s, transform 0.1s;
 }
 
 .cell:hover {
@@ -58,81 +128,25 @@ h1 {
 
 .cell.revealed {
     background-color: var(--revealed-color);
+    transform: scale(0.95);
 }
 
 .cell.mine {
-    background-color: var(--mine-color);
+    background-color: #ff4136;
 }
 
 .cell.flagged {
-    background-color: var(--flag-color);
+    background-color: var(--secondary-color);
 }
 
-.cell.adjacent-1 { color: blue; }
-.cell.adjacent-2 { color: green; }
-.cell.adjacent-3 { color: red; }
-.cell.adjacent-4 { color: darkblue; }
-.cell.adjacent-5 { color: darkred; }
-.cell.adjacent-6 { color: darkcyan; }
-.cell.adjacent-7 { color: black; }
-.cell.adjacent-8 { color: gray; }
-
-#difficulty-selector {
-    margin-bottom: 20px;
-}
-
-button {
-    margin: 0 5px;
-    padding: 8px 16px;
-    cursor: pointer;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-#game-info {
-    margin-top: 20px;
-    font-size: 18px;
-}
-
-#loading-spinner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    color: white;
-    z-index: 1000;
-}
-
-.spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.hidden {
-    display: none !important;
-}
+.cell.adjacent-1 { color: #3498db; }
+.cell.adjacent-2 { color: #2ecc71; }
+.cell.adjacent-3 { color: #e74c3c; }
+.cell.adjacent-4 { color: #9b59b6; }
+.cell.adjacent-5 { color: #f1c40f; }
+.cell.adjacent-6 { color: #1abc9c; }
+.cell.adjacent-7 { color: #34495e; }
+.cell.adjacent-8 { color: #95a5a6; }
 
 .modal {
     position: fixed;
@@ -148,16 +162,63 @@ button:hover {
 }
 
 .modal-content {
-    background-color: white;
+    background-color: var(--background-color);
     padding: 20px;
     border-radius: 10px;
     text-align: center;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
 .modal h2 {
+    color: var(--primary-color);
     margin-top: 0;
 }
 
 .modal button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
     margin-top: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.modal button:hover {
+    background-color: var(--secondary-color);
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 600px) {
+    #game-container {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+
+    #game-controls {
+        flex-direction: column;
+    }
+
+    #difficulty-selector {
+        margin-bottom: 10px;
+    }
+
+    #game-info {
+        flex-wrap: wrap;
+    }
+
+    .info-item {
+        margin: 5px;
+    }
+
+    .cell {
+        --cell-size: 25px;
+    }
 }

@@ -6,9 +6,21 @@ class Game {
         this.boardElement = document.getElementById('game-board');
         this.scoreElement = document.getElementById('score');
         this.highScoreElement = document.getElementById('high-score');
+        this.flagsLeftElement = document.getElementById('flags-left');
+        this.timerElement = document.getElementById('timer');
         this.gameOverModal = document.getElementById('game-over-modal');
         this.gameOverMessage = document.getElementById('game-over-message');
         this.finalScoreElement = document.getElementById('final-score');
+        this.themeToggle = document.getElementById('theme-toggle');
+        this.timerInterval = null;
+        this.startTime = null;
+        this.clickSound = new Audio('click.mp3');
+        this.flagSound = new Audio('flag.mp3');
+        this.explosionSound = new Audio('explosion.mp3');
+        this.winSound = new Audio('win.mp3');
+
+        this.themeToggle.addEventListener('click', () => this.toggleTheme());
+        this.initTheme();
     }
 
     async startGame(difficultyIndex) {
@@ -16,6 +28,7 @@ class Game {
         this.initializeGame(this.convertBigIntsToNumbers(difficulty));
         this.renderBoard();
         await this.updateHighScore();
+        this.startTimer();
     }
 
     initializeGame(difficulty) {
@@ -23,10 +36,12 @@ class Game {
             grid: this.createEmptyGrid(difficulty.width, difficulty.height),
             difficulty: difficulty,
             score: 0,
+            flagsLeft: difficulty.mines,
             isGameOver: false,
             isFirstClick: true
         };
         this.placeMines();
+        this.updateFlagsLeft();
     }
 
     createEmptyGrid(width, height) {
@@ -108,8 +123,10 @@ class Game {
 
         cell.isRevealed = true;
         this.gameState.score += 1;
+        this.clickSound.play();
 
         if (cell.isMine) {
+            this.explosionSound.play();
             this.gameOver(false);
         } else if (cell.adjacentMines === 0) {
             this.revealAdjacentCells(x, y);
@@ -139,7 +156,10 @@ class Game {
         const cell = this.gameState.grid[y][x];
         if (!cell.isRevealed && !this.gameState.isGameOver) {
             cell.isFlagged = !cell.isFlagged;
+            this.gameState.flagsLeft += cell.isFlagged ? -1 : 1;
+            this.flagSound.play();
             this.renderBoard();
+            this.updateFlagsLeft();
         }
     }
 
@@ -152,21 +172,32 @@ class Game {
             }
         }
         if (revealedCount === width * height - mines) {
+            this.winSound.play();
             this.gameOver(true);
         }
     }
 
     async gameOver(isWin) {
         this.gameState.isGameOver = true;
+        clearInterval(this.timerInterval);
         const message = isWin ? 'You Win!' : 'Game Over!';
         this.showGameOverModal(message);
         if (isWin) {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
             await this.updateHighScore();
         }
     }
 
     updateScore() {
         this.scoreElement.textContent = this.gameState.score;
+    }
+
+    updateFlagsLeft() {
+        this.flagsLeftElement.textContent = this.gameState.flagsLeft;
     }
 
     async updateHighScore() {
@@ -178,6 +209,28 @@ class Game {
         this.gameOverMessage.textContent = message;
         this.finalScoreElement.textContent = this.gameState.score;
         this.gameOverModal.classList.remove('hidden');
+    }
+
+    startTimer() {
+        clearInterval(this.timerInterval);
+        this.startTime = Date.now();
+        this.timerInterval = setInterval(() => {
+            const elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
+            const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+            const seconds = (elapsedTime % 60).toString().padStart(2, '0');
+            this.timerElement.textContent = `${minutes}:${seconds}`;
+        }, 1000);
+    }
+
+    toggleTheme() {
+        document.body.classList.toggle('dark-theme');
+        localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+    }
+
+    initTheme() {
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.body.classList.add('dark-theme');
+        }
     }
 
     convertBigIntsToNumbers(obj) {

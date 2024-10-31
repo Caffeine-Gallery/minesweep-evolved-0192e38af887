@@ -3,24 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minesweeper</title>
+    <title>Minesweeper Deluxe</title>
     <link rel="stylesheet" href="index.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
 <body>
     <div id="game-container">
-        <h1>Minesweeper</h1>
-        <div id="difficulty-selector">
-            <button onclick="startGame(0)">Easy</button>
-            <button onclick="startGame(1)">Medium</button>
-            <button onclick="startGame(2)">Hard</button>
-            <button onclick="startGame(3)">Expert</button>
+        <header>
+            <h1>Minesweeper Deluxe</h1>
+            <button id="theme-toggle" aria-label="Toggle dark mode">🌓</button>
+        </header>
+        <div id="game-controls">
+            <div id="difficulty-selector">
+                <button onclick="startGame(0)">Easy</button>
+                <button onclick="startGame(1)">Medium</button>
+                <button onclick="startGame(2)">Hard</button>
+                <button onclick="startGame(3)">Expert</button>
+            </div>
+            <div id="game-info">
+                <div class="info-item">
+                    <span class="icon">🏆</span>
+                    <span id="score">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="icon">🥇</span>
+                    <span id="high-score">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="icon">🚩</span>
+                    <span id="flags-left">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="icon">⏱️</span>
+                    <span id="timer">00:00</span>
+                </div>
+            </div>
         </div>
         <div id="game-board"></div>
-        <div id="game-info">
-            <p>Score: <span id="score">0</span></p>
-            <p>High Score: <span id="high-score">0</span></p>
-        </div>
     </div>
     <div id="game-over-modal" class="modal hidden">
         <div class="modal-content">
