@@ -6,81 +6,69 @@ class Game {
         this.boardElement = document.getElementById('game-board');
         this.scoreElement = document.getElementById('score');
         this.highScoreElement = document.getElementById('high-score');
-        this.loadingSpinner = document.getElementById('loading-spinner');
         this.gameOverModal = document.getElementById('game-over-modal');
         this.gameOverMessage = document.getElementById('game-over-message');
         this.finalScoreElement = document.getElementById('final-score');
     }
 
     async startGame(difficultyIndex) {
-        this.showLoading();
-        try {
-            await backend.newGame(BigInt(difficultyIndex));
-            await this.updateGameState();
-            this.renderBoard();
-            await this.updateHighScore();
-            this.gameOverModal.classList.add('hidden');
-        } catch (error) {
-            console.error('Error starting game:', error);
-        } finally {
-            this.hideLoading();
-        }
+        const difficulty = await backend.getDifficulty(BigInt(difficultyIndex));
+        this.initializeGame(this.convertBigIntsToNumbers(difficulty));
+        this.renderBoard();
+        await this.updateHighScore();
     }
 
-    async updateGameState() {
-        this.showLoading();
-        try {
-            const state = await backend.getGameState();
-            if (state && state.length > 0) {
-                this.gameState = this.convertBigIntsToNumbers(state[0]);
-                this.updateScore(this.gameState.score);
-            } else {
-                console.error('Invalid game state received');
+    initializeGame(difficulty) {
+        this.gameState = {
+            grid: this.createEmptyGrid(difficulty.width, difficulty.height),
+            difficulty: difficulty,
+            score: 0,
+            isGameOver: false,
+            isFirstClick: true
+        };
+        this.placeMines();
+    }
+
+    createEmptyGrid(width, height) {
+        return Array(height).fill().map(() => Array(width).fill().map(() => ({
+            isMine: false,
+            isRevealed: false,
+            isFlagged: false,
+            adjacentMines: 0
+        })));
+    }
+
+    placeMines() {
+        const { width, height, mines } = this.gameState.difficulty;
+        let minesPlaced = 0;
+        while (minesPlaced < mines) {
+            const x = Math.floor(Math.random() * width);
+            const y = Math.floor(Math.random() * height);
+            if (!this.gameState.grid[y][x].isMine) {
+                this.gameState.grid[y][x].isMine = true;
+                minesPlaced++;
+                this.incrementAdjacentCells(x, y);
             }
-        } catch (error) {
-            console.error('Error updating game state:', error);
-        } finally {
-            this.hideLoading();
         }
     }
 
-    convertBigIntsToNumbers(obj) {
-        if (typeof obj !== 'object' || obj === null) {
-            return obj;
-        }
-        if (typeof obj === 'bigint') {
-            return Number(obj);
-        }
-        if (Array.isArray(obj)) {
-            return obj.map(item => this.convertBigIntsToNumbers(item));
-        }
-        const convertedObj = {};
-        for (const key in obj) {
-            convertedObj[key] = this.convertBigIntsToNumbers(obj[key]);
-        }
-        return convertedObj;
+    incrementAdjacentCells(x, y) {
+        const directions = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+        const { width, height } = this.gameState.difficulty;
+        directions.forEach(([dx, dy]) => {
+            const newX = x + dx;
+            const newY = y + dy;
+            if (newX >= 0 && newX < width && newY >= 0 && newY < height) {
+                this.gameState.grid[newY][newX].adjacentMines++;
+            }
+        });
     }
 
     renderBoard() {
-        if (!this.gameState || !this.gameState.grid) {
-            console.error('Game state or grid is undefined', this.gameState);
-            return;
-        }
-
         this.boardElement.innerHTML = '';
-        const grid = this.gameState.grid;
-        if (!Array.isArray(grid)) {
-            console.error('Grid is not an array', grid);
-            return;
-        }
+        this.boardElement.style.setProperty('--grid-size', this.gameState.difficulty.width);
 
-        this.boardElement.style.setProperty('--grid-size', grid[0].length);
-
-        grid.forEach((row, y) => {
-            if (!Array.isArray(row)) {
-                console.error('Row is not an array', row);
-                return;
-            }
+        this.gameState.grid.forEach((row, y) => {
             row.forEach((cell, x) => {
                 const cellElement = document.createElement('div');
                 cellElement.className = 'cell';
@@ -114,46 +102,76 @@ class Game {
         }
     }
 
-    async revealCell(x, y) {
-        this.showLoading();
-        try {
-            const revealedCount = await backend.revealCell(BigInt(x), BigInt(y));
-            await this.updateGameState();
-            this.renderBoard();
-            if (this.gameState.isGameOver) {
-                this.showGameOverModal(revealedCount === 0 ? 'Game Over!' : 'You Win!');
+    revealCell(x, y) {
+        const cell = this.gameState.grid[y][x];
+        if (cell.isRevealed || cell.isFlagged || this.gameState.isGameOver) return;
+
+        cell.isRevealed = true;
+        this.gameState.score += 1;
+
+        if (cell.isMine) {
+            this.gameOver(false);
+        } else if (cell.adjacentMines === 0) {
+            this.revealAdjacentCells(x, y);
+        }
+
+        this.checkWinCondition();
+        this.renderBoard();
+        this.updateScore();
+    }
+
+    revealAdjacentCells(x, y) {
+        const directions = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+        const { width, height } = this.gameState.difficulty;
+        directions.forEach(([dx, dy]) => {
+            const newX = x + dx;
+            const newY = y + dy;
+            if (newX >= 0 && newX < width && newY >= 0 && newY < height) {
+                const adjacentCell = this.gameState.grid[newY][newX];
+                if (!adjacentCell.isRevealed && !adjacentCell.isFlagged) {
+                    this.revealCell(newX, newY);
+                }
             }
-        } catch (error) {
-            console.error('Error revealing cell:', error);
-        } finally {
-            this.hideLoading();
+        });
+    }
+
+    toggleFlag(x, y) {
+        const cell = this.gameState.grid[y][x];
+        if (!cell.isRevealed && !this.gameState.isGameOver) {
+            cell.isFlagged = !cell.isFlagged;
+            this.renderBoard();
         }
     }
 
-    async toggleFlag(x, y) {
-        this.showLoading();
-        try {
-            await backend.toggleFlag(BigInt(x), BigInt(y));
-            await this.updateGameState();
-            this.renderBoard();
-        } catch (error) {
-            console.error('Error toggling flag:', error);
-        } finally {
-            this.hideLoading();
+    checkWinCondition() {
+        const { width, height, mines } = this.gameState.difficulty;
+        let revealedCount = 0;
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                if (this.gameState.grid[y][x].isRevealed) revealedCount++;
+            }
         }
+        if (revealedCount === width * height - mines) {
+            this.gameOver(true);
+        }
+    }
+
+    async gameOver(isWin) {
+        this.gameState.isGameOver = true;
+        const message = isWin ? 'You Win!' : 'Game Over!';
+        this.showGameOverModal(message);
+        if (isWin) {
+            await this.updateHighScore();
+        }
+    }
+
+    updateScore() {
+        this.scoreElement.textContent = this.gameState.score;
     }
 
     async updateHighScore() {
-        try {
-            const highScore = await backend.getHighScore();
-            this.highScoreElement.textContent = Number(highScore);
-        } catch (error) {
-            console.error('Error updating high score:', error);
-        }
-    }
-
-    updateScore(score) {
-        this.scoreElement.textContent = score;
+        const highScore = await backend.updateHighScore(BigInt(this.gameState.score));
+        this.highScoreElement.textContent = Number(highScore);
     }
 
     showGameOverModal(message) {
@@ -162,12 +180,18 @@ class Game {
         this.gameOverModal.classList.remove('hidden');
     }
 
-    showLoading() {
-        this.loadingSpinner.classList.remove('hidden');
-    }
-
-    hideLoading() {
-        this.loadingSpinner.classList.add('hidden');
+    convertBigIntsToNumbers(obj) {
+        if (typeof obj !== 'object' || obj === null) {
+            return typeof obj === 'bigint' ? Number(obj) : obj;
+        }
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.convertBigIntsToNumbers(item));
+        }
+        const convertedObj = {};
+        for (const key in obj) {
+            convertedObj[key] = this.convertBigIntsToNumbers(obj[key]);
+        }
+        return convertedObj;
     }
 }
 

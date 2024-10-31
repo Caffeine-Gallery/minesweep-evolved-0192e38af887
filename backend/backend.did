@@ -1,31 +1,11 @@
-type GameState = 
- record {
-   difficulty: Difficulty;
-   grid: vec vec Cell;
-   isFirstClick: bool;
-   isGameOver: bool;
-   score: nat;
-   startTime: int;
- };
 type Difficulty = 
  record {
-   basePoints: nat;
    height: nat;
    mines: nat;
    width: nat;
  };
-type Cell = 
- record {
-   adjacentMines: nat;
-   isFlagged: bool;
-   isMine: bool;
-   isRevealed: bool;
- };
 service : {
-  getGameState: () -> (opt GameState) query;
+  getDifficulty: (nat) -> (Difficulty) query;
   getHighScore: () -> (nat) query;
-  newGame: (nat) -> ();
-  revealCell: (nat, nat) -> (nat);
-  toggleFlag: (nat, nat) -> (bool);
-  updateScore: (nat) -> (nat);
+  updateHighScore: (nat) -> (nat);
 }
