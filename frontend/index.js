@@ -7,6 +7,9 @@ class Game {
         this.scoreElement = document.getElementById('score');
         this.highScoreElement = document.getElementById('high-score');
         this.loadingSpinner = document.getElementById('loading-spinner');
+        this.gameOverModal = document.getElementById('game-over-modal');
+        this.gameOverMessage = document.getElementById('game-over-message');
+        this.finalScoreElement = document.getElementById('final-score');
     }
 
     async startGame(difficultyIndex) {
@@ -16,6 +19,7 @@ class Game {
             await this.updateGameState();
             this.renderBoard();
             await this.updateHighScore();
+            this.gameOverModal.classList.add('hidden');
         } catch (error) {
             console.error('Error starting game:', error);
         } finally {
@@ -27,10 +31,9 @@ class Game {
         this.showLoading();
         try {
             const state = await backend.getGameState();
-            console.log('Raw game state:', state); // Log raw state for debugging
             if (state && state.length > 0) {
                 this.gameState = this.convertBigIntsToNumbers(state[0]);
-                console.log('Converted game state:', this.gameState); // Log converted state
+                this.updateScore(this.gameState.score);
             } else {
                 console.error('Invalid game state received');
             }
@@ -71,6 +74,8 @@ class Game {
             return;
         }
 
+        this.boardElement.style.setProperty('--grid-size', grid[0].length);
+
         grid.forEach((row, y) => {
             if (!Array.isArray(row)) {
                 console.error('Row is not an array', row);
@@ -98,11 +103,14 @@ class Game {
             cellElement.classList.add('revealed');
             if (cell.isMine) {
                 cellElement.classList.add('mine');
+                cellElement.textContent = '💣';
             } else if (cell.adjacentMines > 0) {
                 cellElement.textContent = cell.adjacentMines;
+                cellElement.classList.add(`adjacent-${cell.adjacentMines}`);
             }
         } else if (cell.isFlagged) {
             cellElement.classList.add('flagged');
+            cellElement.textContent = '🚩';
         }
     }
 
@@ -113,7 +121,7 @@ class Game {
             await this.updateGameState();
             this.renderBoard();
             if (this.gameState.isGameOver) {
-                alert(revealedCount === 0 ? 'Game Over!' : 'You Win!');
+                this.showGameOverModal(revealedCount === 0 ? 'Game Over!' : 'You Win!');
             }
         } catch (error) {
             console.error('Error revealing cell:', error);
@@ -142,6 +150,16 @@ class Game {
         } catch (error) {
             console.error('Error updating high score:', error);
         }
+    }
+
+    updateScore(score) {
+        this.scoreElement.textContent = score;
+    }
+
+    showGameOverModal(message) {
+        this.gameOverMessage.textContent = message;
+        this.finalScoreElement.textContent = this.gameState.score;
+        this.gameOverModal.classList.remove('hidden');
     }
 
     showLoading() {

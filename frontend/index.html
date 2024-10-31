@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minesweeper</title>
     <link rel="stylesheet" href="index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
@@ -21,7 +22,17 @@
             <p>High Score: <span id="high-score">0</span></p>
         </div>
     </div>
-    <div id="loading-spinner" class="hidden">Loading...</div>
+    <div id="loading-spinner" class="hidden">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+    <div id="game-over-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="game-over-message"></h2>
+            <p>Your score: <span id="final-score"></span></p>
+            <button onclick="startGame(0)">Play Again</button>
+        </div>
+    </div>
     <script type="module" src="index.js"></script>
 </body>
 </html>
